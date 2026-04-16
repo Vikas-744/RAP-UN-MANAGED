@@ -1,0 +1,139 @@
+@Metadata.layer: #CORE
+
+@UI: {
+  headerInfo: {
+    typeName: 'MANAGED RAP',
+    typeNamePlural: 'MANAGED Booking Data',
+    title: {
+    type: #STANDARD,
+    label: 'Booking',
+    value: 'BookingId'
+    }
+  }
+}
+
+@Search.searchable: true
+annotate view zvc_rap05_booking_un with
+{
+
+  @UI.facet: [
+                {
+                  id: 'Travel',
+                  purpose: #STANDARD,
+                  position: 10,
+                  label: 'Booking Info.',
+                  type: #IDENTIFICATION_REFERENCE
+                },
+                {
+                  id: 'Supplement',
+                  purpose: #STANDARD,
+                  position: 20,
+                  label: 'Booking Supplement',
+                  type: #LINEITEM_REFERENCE,
+                  targetElement: '_Bookspl'
+                }
+
+                ]
+
+
+  @UI: { lineItem: [{ position : 10 }] ,
+         identification:[ { position : 10 } ]
+  }
+  travelid;
+
+  @UI: { lineItem: [{ position : 11 }] ,
+           identification:[ { position : 11 } ]
+    }
+  @Search.defaultSearchElement: true
+  @Search.fuzzinessThreshold: 0.95
+  bookingid;
+
+  @UI: { lineItem: [{ position : 12 }] ,
+           identification:[ { position : 12 } ]
+    }
+  bookingdate;
+
+  @UI: { lineItem: [{ position : 13 }] ,
+           identification:[ { position : 13 } ]
+    }
+  @Consumption.valueHelpDefinition: [{ entity : { name : '/DMO/I_Customer' ,
+                                              element : 'CustomerID'
+                                                  }
+    }]
+  customerid;
+
+  @UI: { lineItem: [{ position : 14 }] ,
+           identification:[ { position : 14 } ]
+    }
+  @Consumption.valueHelpDefinition: [{ entity : { name : '/DMO/I_Carrier' ,
+                                           element : 'AirlineID'
+                                               },
+     additionalBinding: [
+                        { element : 'AirlineID' , localElement : 'carrierId' },
+                        { element : 'CurrencyCode' , localElement : 'CurrencyCode' }
+                        ]
+  }]
+  carrierid;
+
+  @UI: { lineItem: [{ position : 15 }] ,
+           identification:[ { position : 15 } ]
+    }
+  @Search.defaultSearchElement: true
+  @Search.fuzzinessThreshold: 0.95
+
+  @Consumption.valueHelpDefinition: [{ entity : {
+                                          name : '/DMO/I_Flight' ,
+                                          element : 'ConnectionID'
+                                             },
+    additionalBinding: [
+                        { element : 'ConnectionID' , localElement : 'ConnectionId' },
+                        { element : 'AirlineID' , localElement : 'carrierId' },
+                        { element : 'CurrencyCode' , localElement : 'CurrencyCode' },
+                        { element : 'Price' , localElement : 'FlightPrice' }
+                        ]
+  }]
+  connectionid;
+
+  @UI: { lineItem: [{ position : 16 }] ,
+           identification:[ { position : 16 } ]
+    }
+  @Consumption.valueHelpDefinition: [{ entity : {
+                                          name : '/DMO/I_Flight' ,
+                                          element : 'FlightDate'
+                                             },
+    additionalBinding: [
+                        { element : 'FlightDate' , localElement : 'FlightDate' },
+                        { element : 'AirlineID' , localElement : 'carrierId' },
+                        { element : 'CurrencyCode' , localElement : 'CurrencyCode' },
+                        { element : 'Price' , localElement : 'FlightPrice' }
+                        ]
+  }]
+  flightdate;
+
+  @UI: { lineItem: [{ position : 17 }] ,
+           identification:[ { position : 17 } ]
+    }
+  flightprice;
+
+  @UI: { lineItem: [{ position : 18 }] ,
+           identification:[ { position : 18 } ]
+    }
+  @UI.textArrangement: #TEXT_ONLY
+  @Consumption.valueHelpDefinition: [{ entity : { name : '/DMO/I_Booking_Status_VH' ,
+                                          element : 'BookingStatus'
+                                              }
+   }]
+  bookingstatus;
+
+  @Consumption.valueHelpDefinition: [{ entity : { name : 'I_Currency' ,
+                                          element : 'Currency'
+                                              }
+  }]
+  currencycode;
+
+  @UI: { lineItem: [{ position : 19 }] ,
+         identification:[ { position : 19 } ]
+    }
+  lastchangedat;
+
+}

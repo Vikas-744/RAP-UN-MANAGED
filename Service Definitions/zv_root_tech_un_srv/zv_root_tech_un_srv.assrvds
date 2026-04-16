@@ -1,0 +1,16 @@
+@EndUserText.label: 'UnManaged Srv'
+define service ZV_ROOT_TECH_UN_SRV {
+  expose ZVC_RAP05_TRAVEL_RT_UN;
+  expose ZVC_RAP05_BOOKING_UN    as Booking;
+  expose /DMO/I_Supplement       as Supplement;
+  expose /DMO/I_SupplementText   as SupplementText;
+  expose /DMO/I_Agency           as TravelAgency;
+  expose /DMO/I_Customer         as Passenger;
+  expose I_Currency              as Currency;
+  expose I_Country               as Country;
+  expose /DMO/I_Carrier          as Airline;
+  expose /DMO/I_Connection       as FlightConnection;
+  expose /DMO/I_Flight           as Flight;
+  expose /DMO/I_Airport          as Airport;
+  expose /DMO/I_Travel_Status_VH as TravelStatusVH;
+}

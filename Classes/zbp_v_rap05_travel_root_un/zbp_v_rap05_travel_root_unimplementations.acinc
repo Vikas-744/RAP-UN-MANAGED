@@ -1,0 +1,227 @@
+CLASS lhc_TravelUn DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PUBLIC SECTION.
+
+    TYPES : tt_failed   TYPE TABLE FOR FAILED EARLY zv_rap05_travel_root_un\\travelun,
+            tt_reported TYPE TABLE FOR REPORTED EARLY zv_rap05_travel_root_un\\travelun.
+
+    METHODS map_messages
+      IMPORTING
+        cid          TYPE abp_behv_cid
+        messages     TYPE /dmo/t_message
+      EXPORTING
+        failed_added TYPE abap_boolean
+      CHANGING
+        failed       TYPE tt_failed
+        reported     TYPE tt_reported.
+  PRIVATE SECTION.
+
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR TravelUn RESULT result.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR TravelUn RESULT result.
+
+    METHODS create FOR MODIFY
+      IMPORTING entities FOR CREATE TravelUn.
+
+    METHODS update FOR MODIFY
+      IMPORTING entities FOR UPDATE TravelUn.
+
+    METHODS delete FOR MODIFY
+      IMPORTING keys FOR DELETE TravelUn.
+
+    METHODS read FOR READ
+      IMPORTING keys FOR READ TravelUn RESULT result.
+
+    METHODS lock FOR LOCK
+      IMPORTING keys FOR LOCK TravelUn.
+
+    METHODS rba_Booking FOR READ
+      IMPORTING keys_rba FOR READ TravelUn\_Booking FULL result_requested RESULT result LINK association_links.
+
+    METHODS cba_Booking FOR MODIFY
+      IMPORTING entities_cba FOR CREATE TravelUn\_Booking.
+
+    METHODS set_booking_status FOR MODIFY
+      IMPORTING keys FOR ACTION TravelUn~set_booking_status RESULT result.
+    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
+      IMPORTING REQUEST requested_authorizations FOR TravelUn RESULT result.
+
+ENDCLASS.
+
+CLASS lhc_TravelUn IMPLEMENTATION.
+
+  METHOD get_instance_features.
+  ENDMETHOD.
+
+  METHOD get_instance_authorizations.
+
+
+
+
+  ENDMETHOD.
+
+
+
+
+  METHOD create.
+
+    DATA : ls_travel     TYPE /dmo/travel,
+           ls_travel_out TYPE /dmo/travel,
+           lt_messages   TYPE /dmo/t_message.
+
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<lfs_entity>).
+
+      ls_travel  = CORRESPONDING #( <lfs_entity> MAPPING FROM ENTITY USING CONTROL  ).
+
+      CALL FUNCTION '/DMO/FLIGHT_TRAVEL_CREATE'
+        EXPORTING
+          is_travel         = CORRESPONDING /dmo/s_travel_in( ls_travel )
+*         it_booking        =
+*         it_booking_supplement =
+          iv_numbering_mode = /dmo/if_flight_legacy=>numbering_mode-late
+        IMPORTING
+          es_travel         = ls_travel_out
+*         et_booking        =
+*         et_booking_supplement =
+          et_messages       = lt_messages.
+
+
+      map_messages(
+      EXPORTING
+      cid = <lfs_entity>-%cid
+      messages = lt_messages
+      IMPORTING
+      failed_added = DATA(lv_failed_added)
+      CHANGING
+      failed = failed-travelun
+      reported = reported-travelun
+       ).
+
+      IF   lv_failed_added IS INITIAL.
+        APPEND VALUE #( %cid = <lfs_entity>-%cid TravelId = ls_travel_out-travel_id )
+        TO mapped-travelun.
+
+      ENDIF.
+
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
+  METHOD update.
+
+
+
+    DATA : ls_travel     TYPE /dmo/travel,
+           ls_travel_x   TYPE /dmo/s_travel_inx,
+           ls_travel_out TYPE /dmo/travel,
+           lt_messages   TYPE /dmo/t_message.
+
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<lfs_entity>).
+
+      ls_travel  = CORRESPONDING #( <lfs_entity> MAPPING FROM ENTITY  ).
+
+      ls_travel_x-_intx  = CORRESPONDING #( <lfs_entity> MAPPING FROM ENTITY ).
+      ls_travel_x-travel_id = <lfs_entity>-TravelId.
+
+      CALL FUNCTION '/DMO/FLIGHT_TRAVEL_UPDATE'
+        EXPORTING
+          is_travel   = CORRESPONDING /dmo/s_travel_in( ls_travel )
+          is_travelx  = CORRESPONDING /dmo/s_travel_inx( ls_travel_x )
+        IMPORTING
+          es_travel   = ls_travel_out
+*         et_booking  =
+*         et_booking_supplement =
+          et_messages = lt_messages.
+
+
+      map_messages(
+      EXPORTING
+      cid = <lfs_entity>-%cid_ref
+      messages = lt_messages
+      IMPORTING
+      failed_added = DATA(lv_failed_added)
+      CHANGING
+      failed = failed-travelun
+      reported = reported-travelun
+       ).
+
+      IF   lv_failed_added IS INITIAL.
+        APPEND VALUE #( %cid = <lfs_entity>-%cid_ref
+                        TravelId = ls_travel_out-travel_id  )
+        TO mapped-travelun.
+      ENDIF.
+
+
+    ENDLOOP.
+
+
+
+  ENDMETHOD.
+
+  METHOD delete.
+  ENDMETHOD.
+
+  METHOD read.
+  ENDMETHOD.
+
+  METHOD lock.
+  ENDMETHOD.
+
+  METHOD rba_Booking.
+  ENDMETHOD.
+
+  METHOD cba_Booking.
+  ENDMETHOD.
+
+  METHOD set_booking_status.
+  ENDMETHOD.
+
+
+  METHOD map_messages.
+
+
+
+    LOOP AT messages ASSIGNING FIELD-SYMBOL(<lfs_message>).
+
+
+      IF <lfs_message>-msgty EQ 'E' OR <lfs_message>-msgty EQ 'A'.
+
+        APPEND VALUE #( %cid = cid
+                        %fail-cause =   zcl_travel_aux=>get_cause_from_message(
+                                          msgid        = <lfs_message>-msgid
+                                          msgno        = <lfs_message>-msgno
+                                          is_dependent = abap_false
+                                        )  )
+        TO failed.
+
+
+        APPEND VALUE #( %cid = cid
+                        %msg = new_message(
+                                 id       = <lfs_message>-msgid
+                                 number   = <lfs_message>-msgno
+                                 severity = if_abap_behv_message=>severity-error
+                                 v1       = <lfs_message>-msgv1
+                                 v2       = <lfs_message>-msgv2
+                                 v3       = <lfs_message>-msgv3
+                                 v4       = <lfs_message>-msgv4
+                               ) )
+        TO reported.
+        failed_added = abap_true.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_global_authorizations.
+
+    result-%create = if_abap_behv=>auth-allowed.
+
+  ENDMETHOD.
+
+ENDCLASS.

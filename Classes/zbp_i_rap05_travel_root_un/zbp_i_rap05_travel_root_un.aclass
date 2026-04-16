@@ -1,0 +1,5 @@
+CLASS zbp_i_rap05_travel_root_un DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zv_rap05_travel_root_un.
+ENDCLASS.
+
+CLASS zbp_i_rap05_travel_root_un IMPLEMENTATION.
+ENDCLASS.
